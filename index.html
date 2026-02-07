@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>업비트 vs 빗썸 가격 비교</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #111827;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .title {
+            font-size: 1.875rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .update-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: #9CA3AF;
+        }
+
+        .pulse-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            background-color: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .error-box {
+            margin-top: 0.5rem;
+            background-color: rgba(127, 29, 29, 0.5);
+            border: 1px solid #EF4444;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            color: #FCA5A5;
+            font-size: 0.875rem;
+        }
+
+        .error-detail {
+            font-size: 0.75rem;
+            color: #FCA5A5;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #111827;
+            font-size: 1.25rem;
+            color: #fff;
+        }
+
+        .table-container {
+            background-color: #1F2937;
+            border-radius: 0.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #374151;
+        }
+
+        th {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #E5E7EB;
+        }
+
+        th.text-right {
+            text-align: right;
+        }
+
+        th.text-center {
+            text-align: center;
+        }
+
+        tbody tr {
+            border-top: 1px solid #374151;
+            transition: background-color 0.15s;
+        }
+
+        tbody tr:hover {
+            background-color: #293548;
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+        }
+
+        td.text-right {
+            text-align: right;
+        }
+
+        td.text-center {
+            text-align: center;
+        }
+
+        .coin-name {
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .price {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+
+        .price-normal {
+            color: #D1D5DB;
+        }
+
+        .price-cheaper {
+            color: #34D399;
+            font-weight: 600;
+        }
+
+        .price-diff {
+            color: #FBBF24;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-upbit {
+            background-color: #064E3B;
+            color: #A7F3D0;
+        }
+
+        .badge-bithumb {
+            background-color: #1E3A8A;
+            color: #BFDBFE;
+        }
+
+        .info-box {
+            margin-top: 1.5rem;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .info-box.warning {
+            background-color: rgba(113, 63, 18, 0.3);
+            border: 1px solid #D97706;
+        }
+
+        .info-box.info {
+            background-color: rgba(30, 58, 138, 0.3);
+            border: 1px solid #2563EB;
+        }
+
+        .info-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-title.warning {
+            color: #FBBF24;
+        }
+
+        .info-title.info {
+            color: #60A5FA;
+        }
+
+        .info-list {
+            list-style: none;
+            font-size: 0.875rem;
+        }
+
+        .info-list.warning {
+            color: #FDE68A;
+        }
+
+        .info-list.info {
+            color: #BFDBFE;
+        }
+
+        .info-list li {
+            margin-bottom: 0.25rem;
+        }
+
+        .empty-state {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            color: #9CA3AF;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .title {
+                font-size: 1.5rem;
+            }
+
+            th, td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .coin-name {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const CryptoDashboard = () => {
+            const [prices, setPrices] = useState([]);
+            const [lastUpdate, setLastUpdate] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+
+            const COINS = ['BTC', 'ETH', 'XRP', 'ADA', 'SOL', 'DOGE', 'MATIC', 'DOT', 'AVAX', 'LINK'];
+
+            const fetchPrices = async () => {
+                try {
+                    setError(null);
+                    
+                    const upbitResponse = await fetch('https://api.upbit.com/v1/ticker?markets=' + 
+                        COINS.map(coin => `KRW-${coin}`).join(','));
+                    
+                    if (!upbitResponse.ok) {
+                        throw new Error('업비트 API 호출 실패');
+                    }
+                    
+                    const upbitData = await upbitResponse.json();
+                    
+                    const bithumbResponse = await fetch('https://api.bithumb.com/public/ticker/ALL_KRW');
+                    
+                    if (!bithumbResponse.ok) {
+                        throw new Error('빗썸 API 호출 실패');
+                    }
+                    
+                    const bithumbData = await bithumbResponse.json();
+                    
+                    if (bithumbData.status !== '0000') {
+                        throw new Error('빗썸 API 오류');
+                    }
+
+                    const priceComparison = COINS.map(coin => {
+                        const upbitCoin = upbitData.find(item => item.market === `KRW-${coin}`);
+                        const bithumbCoin = bithumbData.data[coin];
+                        
+                        if (!upbitCoin || !bithumbCoin || !bithumbCoin.closing_price) {
+                            return null;
+                        }
+
+                        const upbitPrice = upbitCoin.trade_price;
+                        const bithumbPrice = parseFloat(bithumbCoin.closing_price);
+                        const difference = bithumbPrice - upbitPrice;
+                        const percentDiff = ((difference / upbitPrice) * 100).toFixed(2);
+                        const cheaper = difference > 0 ? 'upbit' : 'bithumb';
+
+                        return {
+                            coin,
+                            upbitPrice,
+                            bithumbPrice,
+                            difference: Math.abs(difference),
+                            percentDiff: Math.abs(percentDiff),
+                            cheaper
+                        };
+                    }).filter(item => item !== null);
+
+                    setPrices(priceComparison);
+                    setLastUpdate(new Date());
+                    setLoading(false);
+                } catch (err) {
+                    console.error('API Error:', err);
+                    setError(err.message);
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchPrices();
+                const interval = setInterval(fetchPrices, 1000);
+                return () => clearInterval(interval);
+            }, []);
+
+            const formatPrice = (price) => {
+                return new Intl.NumberFormat('ko-KR').format(Math.round(price));
+            };
+
+            const formatTime = (date) => {
+                if (!date) return '';
+                return date.toLocaleTimeString('ko-KR');
+            };
+
+            if (loading) {
+                return (
+                    <div className="loading">
+                        데이터 로딩 중...
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1 className="title">
+                            🪙 업비트 vs 빗썸 가격 비교
+                        </h1>
+                        <div className="update-info">
+                            <span>마지막 업데이트: {formatTime(lastUpdate)}</span>
+                            <span className="pulse-dot"></span>
+                            <span>1초마다 자동 갱신</span>
+                        </div>
+                        {error && (
+                            <div className="error-box">
+                                <strong>오류:</strong> {error}
+                                <span className="error-detail">
+                                    CORS 오류가 발생했다면 브라우저 확장 프로그램을 설치하거나 로컬 서버에서 실행해주세요.
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>코인</th>
+                                    <th className="text-right">업비트 가격</th>
+                                    <th className="text-right">빗썸 가격</th>
+                                    <th className="text-right">가격 차이</th>
+                                    <th className="text-right">차이 (%)</th>
+                                    <th className="text-center">더 저렴한 곳</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {prices.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="empty-state">
+                                            데이터를 불러오는 중입니다...
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    prices.map((item) => (
+                                        <tr key={item.coin}>
+                                            <td>
+                                                <span className="coin-name">{item.coin}</span>
+                                            </td>
+                                            <td className="text-right">
+                                                <span className={`price ${item.cheaper === 'upbit' ? 'price-cheaper' : 'price-normal'}`}>
+                                                    ₩{formatPrice(item.upbitPrice)}
+                                                </span>
+                                            </td>
+                                            <td className="text-right">
+                                                <span className={`price ${item.cheaper === 'bithumb' ? 'price-cheaper' : 'price-normal'}`}>
+                                                    ₩{formatPrice(item.bithumbPrice)}
+                                                </span>
+                                            </td>
+                                            <td className="text-right">
+                                                <span className="price price-diff">
+                                                    ₩{formatPrice(item.difference)}
+                                                </span>
+                                            </td>
+                                            <td className="text-right">
+                                                <span className="price price-diff">
+                                                    {item.percentDiff}%
+                                                </span>
+                                            </td>
+                                            <td className="text-center">
+                                                <span className={`badge ${item.cheaper === 'upbit' ? 'badge-upbit' : 'badge-bithumb'}`}>
+                                                    {item.cheaper === 'upbit' ? '업비트' : '빗썸'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="info-box warning">
+                        <h3 className="info-title warning">⚠️ 주의사항</h3>
+                        <ul className="info-list warning">
+                            <li>• 가격 차이가 있어도 실제 차익거래 시 수수료, 출금 시간 등을 고려해야 합니다</li>
+                            <li>• 표시된 가격은 참고용이며 실제 체결 가격과 다를 수 있습니다</li>
+                            <li>• 투자는 본인의 판단과 책임 하에 신중하게 결정하시기 바랍니다</li>
+                        </ul>
+                    </div>
+
+                    <div className="info-box info">
+                        <h3 className="info-title info">ℹ️ API 호출 제한</h3>
+                        <ul className="info-list info">
+                            <li>• 업비트: 초당 10회, 분당 600회</li>
+                            <li>• 빗썸: 초당 90회</li>
+                            <li>• 현재 설정: 1초마다 갱신 (안전 범위 내)</li>
+                        </ul>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<CryptoDashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>
